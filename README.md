@@ -6,7 +6,7 @@ Escalating concurrent traffic against a live vLLM endpoint, measuring where
 aggregate throughput stops scaling and per-stream latency degrades. Because
 you don't know your serving stack until it breaks under load.
 
-![CI](https://github.com/TechGuardCoders/04-batcher/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/TechGuardCoders/Batcher/actions/workflows/ci.yml/badge.svg)
 
 ## Why
 
