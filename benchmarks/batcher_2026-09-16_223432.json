@@ -1,0 +1,64 @@
+{
+  "timestamp": "2026-09-16_223432",
+  "endpoint": "http://192.168.0.182:8000",
+  "model": "glm-5.3-flash",
+  "max_tokens": 150,
+  "requests_per_level": 8,
+  "levels": [
+    1,
+    2,
+    4
+  ],
+  "results": [
+    {
+      "concurrency": 1,
+      "requests": 8,
+      "ok": 8,
+      "failed": 0,
+      "wall_s": 20.68,
+      "prompt_tokens": 170,
+      "completion_tokens": 736,
+      "aggregate_tok_s": 43.8,
+      "completion_tok_s": 35.6,
+      "per_stream_tok_s": 35.6,
+      "wall_p50_s": 2.929,
+      "wall_p95_s": 5.319,
+      "wall_max_s": 5.32,
+      "fail_samples": []
+    },
+    {
+      "concurrency": 2,
+      "requests": 8,
+      "ok": 8,
+      "failed": 0,
+      "wall_s": 24.27,
+      "prompt_tokens": 187,
+      "completion_tokens": 909,
+      "aggregate_tok_s": 45.2,
+      "completion_tok_s": 37.4,
+      "per_stream_tok_s": 18.7,
+      "wall_p50_s": 6.202,
+      "wall_p95_s": 9.159,
+      "wall_max_s": 9.16,
+      "fail_samples": []
+    },
+    {
+      "concurrency": 4,
+      "requests": 8,
+      "ok": 8,
+      "failed": 0,
+      "wall_s": 20.38,
+      "prompt_tokens": 230,
+      "completion_tokens": 1154,
+      "aggregate_tok_s": 67.9,
+      "completion_tok_s": 56.6,
+      "per_stream_tok_s": 14.2,
+      "wall_p50_s": 9.686,
+      "wall_p95_s": 12.173,
+      "wall_max_s": 12.17,
+      "fail_samples": []
+    }
+  ],
+  "knee_concurrency": 2,
+  "notes": "wall-clock includes full request lifecycle; aggregate_tok_s includes prompt+completion tokens"
+}
