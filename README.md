@@ -62,7 +62,7 @@ batcher.py  --escalating concurrent POSTs-->  vLLM /v1/chat/completions
 - Read-only w.r.t. infrastructure: chat completions only, no config changes.
 - Results committed under `benchmarks/` - honest evidence, dated, with caveats.
 
-## Resume-grade summary
+## Results summary
 
 Load-tested a self-hosted 320B MoE inference cluster with an escalating
 concurrency harness; identified the continuous-batching saturation knee
