@@ -1,6 +1,6 @@
 {
   "timestamp": "2026-09-16_223432",
-  "endpoint": "http://192.168.0.182:8000",
+  "endpoint": "http://<head-node>:8000",
   "model": "glm-5.3-flash",
   "max_tokens": 150,
   "requests_per_level": 8,

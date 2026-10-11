@@ -45,7 +45,7 @@ production `MAX_SEQS=4` cap confirmed as the concurrency ceiling.
 VLLM_API_KEY=<key> python batcher.py --levels 1 2 4 --requests-per-level 8 --max-tokens 150
 ```
 
-Env: `VLLM_BASE_URL` (default `http://192.168.0.182:8000`), `VLLM_MODEL`
+Env: `VLLM_BASE_URL` (default `http://localhost:8000`), `VLLM_MODEL`
 (default `glm-5.3-flash`). The key is never committed. Escalate levels at
 your own capacity risk: `--levels 1 2 4 8 12`.
 
