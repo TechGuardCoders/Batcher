@@ -49,6 +49,18 @@ Env: `VLLM_BASE_URL` (default `http://localhost:8000`), `VLLM_MODEL`
 (default `glm-5.3-flash`). The key is never committed. Escalate levels at
 your own capacity risk: `--levels 1 2 4 8 12`.
 
+### Multi-node fleet
+
+Spread one run across several serving endpoints (requests go round-robin;
+per-level summaries stay aggregated):
+
+```bash
+VLLM_API_KEY=<key> python batcher.py --levels 1 2 4 \
+  --base-urls http://192.168.0.182:8000 http://192.168.0.157:8421
+```
+
+Omitting `--base-urls` keeps the classic single-endpoint behavior.
+
 ## Architecture
 
 ```

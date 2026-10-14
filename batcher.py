@@ -89,15 +89,22 @@ def post_chat(base, key, model, prompt, max_tokens, timeout=240):
         return {"ok": False, "error": f"{type(e).__name__}: {e}", "wall_s": time.perf_counter() - t0}
 
 
-def run_level(base, key, model, level, n_requests, max_tokens, seed):
-    """Fire n_requests at `level` concurrency; return summary dict."""
+def run_level(bases, key, model, level, n_requests, max_tokens, seed):
+    """Fire n_requests at `level` concurrency; return summary dict.
+
+    bases: single URL or list — requests are spread round-robin across
+    endpoints so one harness run can exercise the whole fleet.
+    """
+    if isinstance(bases, str):
+        bases = [bases]
     rng = random.Random(seed)
     t0 = time.perf_counter()
     results = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=level) as ex:
         futures = [
-            ex.submit(post_chat, base, key, model, pick_prompt(rng)[1], max_tokens)
-            for _ in range(n_requests)
+            ex.submit(post_chat, bases[i % len(bases)], key, model,
+                      pick_prompt(rng)[1], max_tokens)
+            for i in range(n_requests)
         ]
         for fut in concurrent.futures.as_completed(futures):
             results.append(fut.result())
@@ -141,21 +148,25 @@ def main():
     ap.add_argument("--max-tokens", type=int, default=120)
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--out", default=None, help="output JSON path (default benchmarks/<ts>.json)")
+    ap.add_argument("--base-urls", nargs="+", default=None, metavar="URL",
+                    help="fleet endpoint base URLs; requests are spread "
+                         "round-robin across them (default: VLLM_BASE_URL)")
     args = ap.parse_args()
 
     base = os.environ.get("VLLM_BASE_URL", "http://localhost:8000")
+    bases = args.base_urls if args.base_urls else [base]
     key = os.environ.get("VLLM_API_KEY")
     model = os.environ.get("VLLM_MODEL", "glm-5.3-flash")
     if not key:
         sys.exit("set VLLM_API_KEY (bearer token); never committed to the repo")
 
     print(f"Batcher: levels {args.levels}, {args.requests_per_level} req/level, "
-          f"max_tokens {args.max_tokens} against {base} ({model})\n")
+          f"max_tokens {args.max_tokens} against {', '.join(bases)} ({model})\n")
 
     all_results = []
     for i, level in enumerate(args.levels):
         seed = args.seed + i * 1000
-        r = run_level(base, key, model, level, args.requests_per_level, args.max_tokens, seed)
+        r = run_level(bases, key, model, level, args.requests_per_level, args.max_tokens, seed)
         all_results.append(r)
         print(f"c={level:>2}  ok={r['ok']}/{r['requests']}  "
               f"agg={r['aggregate_tok_s']} tok/s  per-stream={r['per_stream_tok_s']}  "
@@ -176,6 +187,7 @@ def main():
     doc = {
         "timestamp": time.strftime("%Y-%m-%d_%H%M%S"),
         "endpoint": base,
+        "endpoints": bases,
         "model": model,
         "max_tokens": args.max_tokens,
         "requests_per_level": args.requests_per_level,

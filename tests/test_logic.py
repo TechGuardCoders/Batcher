@@ -5,7 +5,7 @@ from collections import Counter
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from batcher import pick_prompt, WEIGHTS  # noqa: E402
+from batcher import pick_prompt, run_level, WEIGHTS  # noqa: E402
 
 
 def test_mixer_covers_all_classes():
@@ -78,3 +78,58 @@ def test_no_knee_when_scaling_linear():
             knee = cur["concurrency"]
             break
     assert knee is None
+
+
+def _fake_chat_response(payload_ok=True):
+    class R:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            pass
+
+        def read(self):
+            return b'{"usage": {"prompt_tokens": 5, "completion_tokens": 10}}'
+    return R
+
+
+def test_run_level_spreads_across_endpoints():
+    """Fleet mode: requests round-robin across --base-urls endpoints."""
+    import unittest.mock as mock
+    seen = []
+
+    def fake_urlopen(req, timeout=240):
+        seen.append(req.full_url)
+        return _fake_chat_response()()
+    with mock.patch("urllib.request.urlopen", side_effect=fake_urlopen):
+        r = run_level(["http://a:8000", "http://b:8000"], "k", "m",
+                      level=2, n_requests=4, max_tokens=10, seed=1)
+    assert r["ok"] == 4 and r["failed"] == 0
+    hosts = {u.split("/")[2] for u in seen}
+    assert hosts == {"a:8000", "b:8000"}, f"expected both endpoints hit, got {hosts}"
+
+
+def test_run_level_single_endpoint_unchanged():
+    import unittest.mock as mock
+    seen = []
+
+    def fake_urlopen(req, timeout=240):
+        seen.append(req.full_url)
+        return _fake_chat_response()()
+    with mock.patch("urllib.request.urlopen", side_effect=fake_urlopen):
+        r = run_level("http://solo:8000", "k", "m",
+                      level=1, n_requests=3, max_tokens=10, seed=1)
+    assert r["ok"] == 3
+    assert {u.split("/")[2] for u in seen} == {"solo:8000"}
+
+
+def test_run_level_counts_failures():
+    import unittest.mock as mock
+
+    def boom(req, timeout=240):
+        raise OSError("refused")
+    with mock.patch("urllib.request.urlopen", side_effect=boom):
+        r = run_level(["http://down:8000"], "k", "m",
+                      level=1, n_requests=2, max_tokens=10, seed=1)
+    assert r["ok"] == 0 and r["failed"] == 2
+    assert r["fail_samples"] and "OSError" in r["fail_samples"][0]
