@@ -81,3 +81,18 @@ concurrency harness; identified the continuous-batching saturation knee
 (sub-linear 1.55x aggregate scaling at 4 streams on a bandwidth-bound MoE)
 and quantified the latency/throughput trade-off that informs capacity
 planning and autoscaler thresholds.
+
+## Docker
+
+Multi-stage, multi-arch image (amd64 + arm64), runs as non-root.
+
+```bash
+# Build for your local arch
+docker build -t batcher .
+
+# Build for both arches with buildx
+docker buildx build --platform linux/amd64,linux/arm64 -t batcher .
+
+# Run
+docker run --rm -e VLLM_API_KEY=$VLLM_API_KEY -e VLLM_BASE_URL=http://host.docker.internal:8000 batcher
+```
